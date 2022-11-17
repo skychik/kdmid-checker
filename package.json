@@ -1,0 +1,21 @@
+{
+  "name": "kdmid-checker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@cantfindkernel/ddos-guard-bypass": "^1.0.6",
+    "playwright": "^1.27.1",
+    "playwright-extra": "^4.3.5",
+    "puppeteer-extra-plugin-recaptcha": "^3.6.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.1",
+    "telegram-notify": "^1.3.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.27.1"
+  }
+}
