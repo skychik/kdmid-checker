@@ -1,7 +1,8 @@
 import Telegram from "telegram-notify";
 import config from "../kdmid-checker.config";
+import { NotifyParams } from "./notify";
 
-export const notifyViaTelegram = async (params?: { e: any }) => {
+export const notifyViaTelegram = async (params?: NotifyParams) => {
     let message = `Probably found free spot. Check out: ${config.link_to_kdmid}`;
     if (params) {
         message = JSON.stringify(params.e);

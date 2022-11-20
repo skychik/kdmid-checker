@@ -1,10 +1,19 @@
-import {expect, test} from '@playwright/test';
+import {expect, Locator, test} from '@playwright/test';
 import {notify} from "../notify/notify";
 
 // import {bypassDdosGuardHeaders} from "../ddos-guard/ddos-bypass";
 import config from "../kdmid-checker.config";
 
 const sleep = (timeInMs) => new Promise((resolve) => setTimeout(resolve, timeInMs));
+
+async function isVisible(loc: Locator): Promise<boolean> {
+    try {
+        const isVisible = await loc.isVisible();
+        return isVisible;
+    } catch (e) {
+        return false;
+    }
+}
 
 test('check kdmid', async ({page}) => {
     // await notify()
@@ -31,12 +40,35 @@ test('check kdmid', async ({page}) => {
         let noFreeTime: boolean = true;
         while (noFreeTime) {
             const noFreeTimeLoc = page.getByText('В настоящий момент на интересующее Вас консульское действие в системе предварите')
-            if (!noFreeTimeLoc.isVisible()) {
+            
+            if (!await isVisible(noFreeTimeLoc)) {
                 noFreeTime = false;
                 await notify()
             } else {
-                await sleep((10 + 60 * Math.random()) * 1000);
-                await page.reload({timeout: 0})
+                await sleep(1000);
+                const newFormLoc = page.getByText('Внимание! Поля, отмеченные *, обязательны для заполнения.');
+                if (await isVisible(newFormLoc)) {
+                    await notify({e: 'New form page showed. You need to rerun script'})
+                    await sleep(60*60*1000);
+                    break;
+                }
+
+                let wasError: boolean;
+                let errorCount = 0;
+                do {
+                    await sleep((10 + 60 * Math.random()) * 1000);
+                    try {
+                        await page.reload()
+                        wasError = false;
+                    } catch (e) {
+                        errorCount++;
+                        wasError = true;
+                        console.log(e, e.stack)
+                        if (errorCount % 240 === 60) {
+                            await notify({e});
+                        }
+                    }
+                } while (wasError);
             }
         }
     } catch (e) {
