@@ -15,6 +15,19 @@ async function isVisible(loc: Locator): Promise<boolean> {
     }
 }
 
+function isTimeToWaitAndNotReload(): boolean {
+    const date = new Date();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    if (hours === 6) {
+        if (minutes >= 43) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 test('check kdmid', async ({page}) => {
     // await notify()
     try {
@@ -37,22 +50,27 @@ test('check kdmid', async ({page}) => {
 
         await expect(page.getByRole('heading', {name: 'ПРОВЕРКА НАЛИЧИЯ СВОБОДНОГО ВРЕМЕНИ'})).toBeVisible();
 
-        let noFreeTime: boolean = true;
-        while (noFreeTime) {
-            const noFreeTimeLoc = page.getByText('В настоящий момент на интересующее Вас консульское действие в системе предварите')
+        while (true) {
+            if (isTimeToWaitAndNotReload()) {
+                await sleep((10 + 6 * Math.random()) * 1000);
+                continue;
+            }
+            const newFormLoc = page.getByText('Внимание! Поля, отмеченные *, обязательны для заполнения.');
+            if (await isVisible(newFormLoc)) {
+                await notify({e: 'New form page showed. You need to rerun script'})
+                await sleep(3*24*60*60*1000);
+                break;
+            }
             
+            const noFreeTimeLoc = page.getByText('В настоящий момент на интересующее Вас консульское действие в системе предварите')
             if (!await isVisible(noFreeTimeLoc)) {
-                noFreeTime = false;
-                await notify()
-            } else {
-                await sleep(1000);
-                const newFormLoc = page.getByText('Внимание! Поля, отмеченные *, обязательны для заполнения.');
-                if (await isVisible(newFormLoc)) {
-                    await notify({e: 'New form page showed. You need to rerun script'})
-                    await sleep(60*60*1000);
-                    break;
+                await sleep((10 + 60 * Math.random()) * 1000);
+                if (!await page.getByText('Проводятся регламентные работы. Сервис временно недоступен, повторите попытку че').isVisible()) {
+                    console.log((new Date()).toUTCString, 'Проводятся регламентные работы.')
+                } else {
+                    await notify()
                 }
-
+            } else {
                 let wasError: boolean;
                 let errorCount = 0;
                 do {
@@ -63,7 +81,7 @@ test('check kdmid', async ({page}) => {
                     } catch (e) {
                         errorCount++;
                         wasError = true;
-                        console.log(e, e.stack)
+                        console.log((new Date()).toUTCString, e, e.stack)
                         if (errorCount % 240 === 60) {
                             await notify({e});
                         }
@@ -72,7 +90,7 @@ test('check kdmid', async ({page}) => {
             }
         }
     } catch (e) {
-        await notify({e})
+        await notify({e: {e, stack: e.stack}})
         throw e
     }
 });
