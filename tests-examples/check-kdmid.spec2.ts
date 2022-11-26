@@ -3,6 +3,7 @@ import {Locator, Page, test} from '@playwright/test';
 import {notify} from "../notify/notify";
 import config from "../kdmid-checker.config";
 import {assertNever, smallSleep} from "../helpers";
+import {screenshot} from "../notify/screenshot";
 
 export type KdmidState =
 // | 'ddosGuard'
@@ -117,6 +118,7 @@ async function process(page: Page, newState: KdmidState, prevState: KdmidState |
             return
         case "unknown":
             log(page.url())
+            const pathToScreenshot = screenshot(page)
             // take screenshot, send it to tg
             await notify({type: 'unknown'})
             return;

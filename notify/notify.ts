@@ -1,12 +1,23 @@
 import config from "../kdmid-checker.config";
 import Telegram from "telegram-notify";
 import {assertNever} from "../helpers";
+import {TgUser} from "../types";
+
+const doForEveryTgUser = async <T>(fn: (user: TgUser) => Promise<T>): Promise<T[]> => {
+    return await Promise.all(config.users.map(user => fn(user)));
+}
 
 const notifyTelegram = async (message: string) => {
-    for (const user of config.users) {
+    doForEveryTgUser(async user => {
         const notify = new Telegram({token: config.telegram_token, chatId: user.chatId});
         await notify.send(message, {}, {disable_notification: false});
-    }
+    })
+}
+
+const sendFileTelegram = async (pathToFile: string): Promise<void> => {
+    doForEveryTgUser(async user => {
+        //
+    })
 }
 
 export type NotifyParams =
@@ -38,4 +49,13 @@ export const notify = async (params: NotifyParams) => {
         default:
             assertNever(type)
     }
+}
+
+export const askCaptchaAnswer = async (pathToFile: string) => {
+    // send file to everyone
+    sendFileTelegram(pathToFile)
+    // wait for a single answer
+
+    // send everyone, that answer was given
+    notifyTelegram(`Answer for ${pathToFile} was given`)
 }

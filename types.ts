@@ -1,5 +1,6 @@
+export type TgUser = { chatId: number; username: string };
 export type Config = {
-    users: { chatId: number; username: string }[];
+    users: TgUser[];
     link_to_kdmid: string;
     telegram_token: string;
 }
